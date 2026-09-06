@@ -1,0 +1,51 @@
+{
+    "name": "ROS 2 Ardupilot Env",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USERNAME": "ros",
+            "USER_UID": "1001",
+            "USER_GID": "1001"
+        }
+    },
+    "remoteUser": "ros",
+    "runArgs": [
+        "--name", "ardupilot_sitl",
+        "--network=host",
+        "--privileged",
+        "--env=DISPLAY=${env:DISPLAY}",
+        "--env=QT_X11_NO_MITSHM=1",
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw",
+        "--gpus=all",
+        "--env=NVIDIA_VISIBLE_DEVICES=all",
+        "--env=NVIDIA_DRIVER_CAPABILITIES=all"
+    ],
+    "portsAttributes": {
+        "5760": { "onAutoForward": "ignore" },
+        "5910": { "onAutoForward": "ignore" },
+        "6760": { "onAutoForward": "ignore" },
+        "9002": { "onAutoForward": "ignore" },
+        "9003": { "onAutoForward": "ignore" }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Ranch-Hand-Robotics.rde-ros-2",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
+                "mhutchie.git-graph"
+            ],
+            "settings": {
+                "remote.autoForwardPorts": false,
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                },
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ros2_ws,type=bind",
+    "workspaceFolder": "/home/ros/ros2_ws"
+}
