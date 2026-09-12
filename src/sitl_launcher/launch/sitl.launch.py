@@ -55,10 +55,22 @@ def generate_launch_description():
             }.items()
         )
 
+    # Start ROS-Gazebo bridge
+    bridge_launch_path = os.path.join(
+            FindPackageShare('sitl_launcher').find('sitl_launcher'),
+            'launch',
+            'bridge.launch.py'
+        )
+
+    bridge = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(bridge_launch_path)
+        )
+
     return LaunchDescription([
         set_sim_time,
         set_model_path,
         gazebo,
         ardupilot_sitl,
-        mavros
+        mavros,
+        bridge
     ])
