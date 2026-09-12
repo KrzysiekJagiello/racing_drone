@@ -70,3 +70,16 @@ RUN echo "export PATH=\$PATH:/home/$USERNAME/ardupilot/Tools/autotest" >> /home/
     && echo "source /opt/ros/humble/setup.bash" >> /home/$USERNAME/.bashrc
 
 WORKDIR /home/$USERNAME/ros2_ws
+
+# 6. ros_gz_bridge kompilowany ze zrodel (Harmonic) — poza ros2_ws (bind mount go nadpisuje)
+RUN mkdir -p /home/$USERNAME/ros_gz_ws/src \
+    && cd /home/$USERNAME/ros_gz_ws/src \
+    && git clone https://github.com/gazebosim/ros_gz.git -b humble
+
+RUN /bin/bash -c "cd /home/$USERNAME/ros_gz_ws \
+    && source /opt/ros/humble/setup.bash \
+    && export GZ_VERSION=harmonic \
+    && export MAKEFLAGS='-j4' \
+    && colcon build --packages-select ros_gz_bridge ros_gz_interfaces --symlink-install"
+
+RUN echo "source /home/$USERNAME/ros_gz_ws/install/setup.bash" >> /home/$USERNAME/.bashrc
