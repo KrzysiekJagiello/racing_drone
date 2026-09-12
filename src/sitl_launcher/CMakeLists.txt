@@ -26,6 +26,9 @@ endif()
 install(DIRECTORY
   launch
   config
+  models
+  urdf
+  worlds
   DESTINATION share/${PROJECT_NAME}/
 )
 
