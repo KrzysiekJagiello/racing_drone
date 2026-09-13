@@ -47,5 +47,6 @@
         }
     },
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ros2_ws,type=bind",
-    "workspaceFolder": "/home/ros/ros2_ws"
+    "workspaceFolder": "/home/ros/ros2_ws",
+    "postCreateCommand": "git submodule update --init --recursive && bash -lc 'source /opt/ros/humble/setup.bash && source /home/ros/ros_gz_ws/install/setup.bash && rosdep install --from-paths src -i -y && colcon build --symlink-install'"
 }
