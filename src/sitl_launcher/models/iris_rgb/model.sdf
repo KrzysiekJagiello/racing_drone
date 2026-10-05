@@ -7,7 +7,7 @@
 
     <!-- ===== RGB camera, rigidly fixed to base_link ===== -->
     <link name="camera_link">
-      <pose relative_to="iris_with_standoffs::base_link">0.135 0 0 0 -0.26 0</pose>
+      <pose relative_to="iris_with_standoffs::base_link">0.135 0 0 0 0.3491 0</pose>
       <inertial>
         <mass>0.001</mass>
         <inertia>

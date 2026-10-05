@@ -57,7 +57,7 @@
   <joint name="camera_joint" type="fixed">
     <parent link="base_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.135 0 0" rpy="0 -0.26 0"/>
+    <origin xyz="0.135 0 0" rpy="0 0.3491 0"/>
   </joint>
 
   <!-- Optical frame (REP-103): matches the SDF camera_optical_link and the image frame_id -->
