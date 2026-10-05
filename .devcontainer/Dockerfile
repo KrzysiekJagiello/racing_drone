@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-mavros-extras \
     rapidjson-dev \
     libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    libceres-dev \
+    libboost-all-dev \
     && curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list \
     && apt-get update && apt-get install -y gz-harmonic ros-humble-ros-gz libgz-sim8-dev \
