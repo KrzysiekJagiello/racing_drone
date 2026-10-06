@@ -1,0 +1,15 @@
+%YAML:1.0
+
+cam0:
+  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [0.000000, -0.342020, 0.939693, 0.135000]
+    - [1.000000,  0.000000, 0.000000, 0.000000]
+    - [0.000000,  0.939693, 0.342020, 0.000000]
+    - [0.0, 0.0, 0.0, 1.0]
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [0.0, 0.0, 0.0, 0.0]   # sim camera has no lens distortion
+  distortion_model: radtan
+  intrinsics: [554.383, 554.383, 320.0, 240.0]   # fu, fv, cu, cv  (hfov 1.047 rad, 640x480)
+  resolution: [640, 480]
+  rostopic: /iris_rgb/camera_image
