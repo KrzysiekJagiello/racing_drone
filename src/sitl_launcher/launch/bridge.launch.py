@@ -17,11 +17,15 @@ def generate_launch_description():
 
                 # IMU data
                 '/world/iris_runway/model/iris_rgb/model/iris_with_standoffs/link/imu_link/sensor/imu_sensor/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+
+                # Odometry
+                '/model/iris_rgb/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry'
             ],
             remappings=[
                 ('/camera', '/iris_rgb/camera_image'),
                 ('/camera_info', '/iris_rgb/camera_info'),
-                ('/world/iris_runway/model/iris_rgb/model/iris_with_standoffs/link/imu_link/sensor/imu_sensor/imu', '/iris_rgb/imu')
+                ('/world/iris_runway/model/iris_rgb/model/iris_with_standoffs/link/imu_link/sensor/imu_sensor/imu', '/iris_rgb/imu'),
+                ('/model/iris_rgb/odometry', '/ground_truth/odom')
             ],
 
 
