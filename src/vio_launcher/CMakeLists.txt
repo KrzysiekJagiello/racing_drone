@@ -31,6 +31,7 @@ install(DIRECTORY
 
 install(PROGRAMS
   scripts/vio_to_mavros.py
+  scripts/traj_follower.py
 DESTINATION lib/${PROJECT_NAME}
 )
 
