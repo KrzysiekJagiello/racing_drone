@@ -18,7 +18,7 @@ from math import factorial
 
 import numpy as np
 
-GATE_DEPTH_EQ_BAR = True      # gate depth = bar thickness (as in make_track.py)
+GATE_DEPTH = 0.12             # gate depth along travel (as in make_track.py)
 POLE_HALF = 0.03              # 0.06 m square pole under each gate (as in make_track.py)
 
 
@@ -202,7 +202,7 @@ def clearance(gates, p):
     who = np.zeros(len(p), int)
     for gi, g in enumerate(gates):
         W, t = g["W"], g["t"]
-        d = t if GATE_DEPTH_EQ_BAR else 0.12
+        d = GATE_DEPTH
         zb = g["p"][2] - W / 2 - t
         solids = [
             ((0, 0, W / 2 + t / 2), (d / 2, (W + 2 * t) / 2, t / 2)),      # top
