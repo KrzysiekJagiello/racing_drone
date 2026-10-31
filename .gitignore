@@ -1,4 +1,7 @@
 build/
 install/
 log/
+flight_logs/
+race_track_tools/traj_*.csv
+race_track_tools/traj_*.png
 .vscode/
