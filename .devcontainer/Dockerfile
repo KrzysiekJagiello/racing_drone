@@ -85,3 +85,7 @@ RUN /bin/bash -c "cd /home/$USERNAME/ros_gz_ws \
     && colcon build --packages-select ros_gz_bridge ros_gz_interfaces --symlink-install"
 
 RUN echo "source /home/$USERNAME/ros_gz_ws/install/setup.bash" >> /home/$USERNAME/.bashrc
+
+# 7. OpenCV z modulem aruco >= 4.7 (apt ma 4.5, bez nowego API aruco), numpy<2 dla cv_bridge
+RUN pip3 install --user mavproxy pymavlink \
+    "opencv-contrib-python-headless==4.8.1.78" "numpy<2"
