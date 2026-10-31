@@ -14,11 +14,14 @@ the approaching drone. Tag id = 4 * gate + corner, so --tag-corners and --tag-ga
 Example:
   python3 make_track.py --radius 6 --center 5 5 --heights 1.5 2.5 3.5 2.5
   python3 make_track.py --tag-corners 0 1       # top corners only
+  python3 make_track.py --model-dir             # write the model straight into the sim package
 """
 import argparse
 import csv
 import math
 import os
+
+SIM_MODELS = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "sitl_launcher", "models"))
 
 
 def main():
@@ -41,6 +44,8 @@ def main():
     ap.add_argument("--tag-gates", type=int, nargs="+", default=None, help="gates that get tags (default all)")
     ap.add_argument("--tag-size", type=float, default=0.30, help="side of the black marker [m], white margin is 1/6 of it")
     ap.add_argument("--tag-gap", type=float, default=0.02, help="gap between frame and tag panel, only if the bar is narrower than the panel [m]")
+    ap.add_argument("--model-dir", nargs="?", const=SIM_MODELS, default=None, metavar="DIR",
+                    help=f"write the model into DIR/race_track/ (overwrites) instead of --out; without DIR: {SIM_MODELS}")
     ap.add_argument("--out", default="track_out")
     a = ap.parse_args()
 
@@ -146,8 +151,9 @@ def main():
            '  <sdf version="1.9">model.sdf</sdf>\n'
            f'  <description>Circle of {n} gates at different heights (visual only).</description>\n</model>\n')
 
-    mdir = os.path.join(a.out, "race_track")
+    mdir = os.path.join(a.model_dir or a.out, "race_track")
     os.makedirs(mdir, exist_ok=True)
+    os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(mdir, "model.sdf"), "w") as f:
         f.write(sdf)
     with open(os.path.join(mdir, "model.config"), "w") as f:
