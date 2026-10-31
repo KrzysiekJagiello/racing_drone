@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="race_track">
+    <static>true</static>
+    <link name="gate_0">
+      <pose>-0.5433 2.7039 1.5000 0 0 1.963495</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>0.1 0.8 0.2 1</ambient><diffuse>0.1 0.8 0.2 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>0.1 0.8 0.2 1</ambient><diffuse>0.1 0.8 0.2 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>0.1 0.8 0.2 1</ambient><diffuse>0.1 0.8 0.2 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>0.1 0.8 0.2 1</ambient><diffuse>0.1 0.8 0.2 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.2600 0 0 0</pose><geometry><box><size>0.06 0.06 0.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_1">
+      <pose>-0.5433 7.2961 2.5000 0 0 1.178097</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.7600 0 0 0</pose><geometry><box><size>0.06 0.06 1.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_2">
+      <pose>2.7039 10.5433 3.5000 0 0 0.392699</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -2.2600 0 0 0</pose><geometry><box><size>0.06 0.06 2.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_3">
+      <pose>7.2961 10.5433 2.5000 0 0 -0.392699</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.7600 0 0 0</pose><geometry><box><size>0.06 0.06 1.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_4">
+      <pose>10.5433 7.2961 1.5000 0 0 -1.178097</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.2600 0 0 0</pose><geometry><box><size>0.06 0.06 0.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_5">
+      <pose>10.5433 2.7039 2.5000 0 0 -1.963495</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.7600 0 0 0</pose><geometry><box><size>0.06 0.06 1.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_6">
+      <pose>7.2961 -0.5433 3.5000 0 0 -2.748894</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -2.2600 0 0 0</pose><geometry><box><size>0.06 0.06 2.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+    <link name="gate_7">
+      <pose>2.7039 -0.5433 2.5000 0 0 -3.534292</pose>
+      <visual name="top"><pose>0 0 0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="bottom"><pose>0 0 -0.9600 0 0 0</pose><geometry><box><size>0.12 2.0400 0.12</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="left"><pose>0 0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="right"><pose>0 -0.9600 0 0 0 0</pose><geometry><box><size>0.12 0.12 1.8</size></box></geometry><material><ambient>1.0 0.45 0.0 1</ambient><diffuse>1.0 0.45 0.0 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+      <visual name="pole"><pose>0 0 -1.7600 0 0 0</pose><geometry><box><size>0.06 0.06 1.4800</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse><specular>0.1 0.1 0.1 1</specular></material></visual>
+    </link>
+  </model>
+</sdf>

@@ -118,6 +118,10 @@
     <include>
       <uri>model://vio_scene</uri>
     </include>
+    
+    <include>
+      <uri>model://race_track</uri>
+    </include>
 
     <include>
       <uri>model://iris_rgb</uri>
