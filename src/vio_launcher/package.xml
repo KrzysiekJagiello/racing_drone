@@ -3,8 +3,8 @@
 <package format="3">
   <name>vio_launcher</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="jagiellokrzysiek876@gmail.com">ros</maintainer>
+ <description>OpenVINS configuration, VIO-to-MAVROS relay, ArUco tag positions, ArUco drift correction node and trajectory follower.</description>
+  <maintainer email="jagiellokrzysiek876@gmail.com">Krzysztof Jagiełło</maintainer>
   <license>GPL-3.0-only</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

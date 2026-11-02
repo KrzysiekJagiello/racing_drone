@@ -3,8 +3,8 @@
 <package format="3">
   <name>sitl_launcher</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="jagiellokrzysiek876@gmail.com">ros</maintainer>
+  <description>ArduPilot SITL, Gazebo Harmonic world and models (including the generated race track) and MAVROS bridge for the racing drone simulation.</description>
+  <maintainer email="jagiellokrzysiek876@gmail.com">Krzysztof Jagiełło</maintainer>
   <license>GPL-3.0-only</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
