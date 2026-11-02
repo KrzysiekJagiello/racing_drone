@@ -4,4 +4,5 @@ log/
 flight_logs/
 race_track_tools/traj_*.csv
 race_track_tools/traj_*.png
+race_track_tools/track_out
 .vscode/
