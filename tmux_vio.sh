@@ -2,14 +2,17 @@
 # Start the VIO sim stack in one tmux session.
 #   ./tmux_vio.sh          start, or re-attach if it is running
 #   ./tmux_vio.sh stop     Ctrl-C every pane, then kill the session
-# Windows: sim | vio (OpenVINS | relay) | rec (recorder) | fly (free shell)
+# Windows: sim | vio (OpenVINS | relay [/ correction])  | rec (recorder) | fly (free shell)
 # Keys: Ctrl-b n / p = next / previous window, Ctrl-b d = detach. Mouse scrolling is on.
+#   ./tmux_vio.sh correct  also run the ArUco drift correction (relay -> /vio/pose_raw -> aruco_correction -> MAVROS)
 # Recorder reference: Gazebo truth /ground_truth/odom. GT=/mavros/local_position/odom uses the EKF instead.
 
 set -u
 WS="${WS:-$HOME/ros2_ws}"
 S=vio
 GT="${GT:-/ground_truth/odom}"
+CORRECT=0; [ "${1:-}" = "correct" ] && CORRECT=1
+TAGS="${TAGS:-tags_start_frame.csv}"
 SRC="source /opt/ros/humble/setup.bash; source $WS/install/setup.bash"
 
 if [ "${1:-}" = "stop" ]; then
@@ -47,8 +50,15 @@ ros2 launch ov_msckf subscribe.launch.py \
 config_path:=\$(ros2 pkg prefix vio_launcher)/share/vio_launcher/config/openvins/iris_rgb/estimator_config.yaml \
 max_cameras:=1 use_stereo:=false rviz_enable:=false 2>&1 | tee \"\$LOGDIR/openvins_\$(date +%Y%m%d_%H%M%S).log\"" C-m
 tmux split-window -h -t "$S:vio" -c "$WS"
+REMAP=""; [ "$CORRECT" = 1 ] && REMAP=" -r /mavros/vision_pose/pose:=/vio/pose_raw"      # relay feeds the correction node instead of MAVROS
 tmux send-keys  -t "$S:vio.1" "$SRC; echo 'waiting for sim...'; $W_IMU; $W_FCU; \
-ros2 run vio_launcher vio_to_mavros.py --ros-args -p use_sim_time:=true" C-m
+ros2 run vio_launcher vio_to_mavros.py --ros-args -p use_sim_time:=true$REMAP" C-m
+if [ "$CORRECT" = 1 ]; then      # corrected pose goes to MAVROS (bottom right of the vio window)
+  tmux split-window -v -t "$S:vio.1" -c "$WS"
+  tmux send-keys  -t "$S:vio.2" "$SRC; echo 'waiting for sim...'; $W_IMU; $W_FCU; \
+ros2 run vio_launcher aruco_correction.py --ros-args -p use_sim_time:=true -p tags_csv:=$TAGS \
+-p vio_topic:=/vio/pose_raw -p out_topic:=/mavros/vision_pose/pose" C-m
+fi
 
 # rec: recorder (Ctrl-C to stop; the flight scripts stop it after landing)
 tmux new-window -t "$S:" -n rec -c "$WS"
