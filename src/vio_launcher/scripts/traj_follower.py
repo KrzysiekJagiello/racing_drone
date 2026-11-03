@@ -16,11 +16,17 @@ Parameters
   hold_s        keep holding the last point for this long       (default 2)
   start_tol     abort if the drone is farther than this [m] from the first point   (default 0.5)
   yaw_rate_max  limit on how fast the commanded yaw may turn [rad/s]   (default 1.5)
+  contour_gain  shift the setpoint sideways, against the horizontal cross-path error, by gain x error
+                (0 = off, the old behaviour; try 0.5, then 1.0)               (default 0)
+  contour_max   limit on that shift [m]                                (default 0.5)
+  contour_min_speed  no correction below this reference speed [m/s]    (default 1.0)
+  search_s      the nearest path point is searched within +-search_s of the reference time   (default 1.0)
   actual_topic  odometry used for the tracking error             (default /mavros/local_position/odom)
   log           output prefix for <log>.csv with reference vs actual (default <flight_logs>/track_log_<time>,
                 flight_logs = $FLIGHT_LOGS or ~/ros2_ws/flight_logs)
 
 Exit code 0 = finished, 1 = aborted (wrong start position, bad file, interrupted).
+The log also has the setpoint actually sent (cmd_x,y,z) and the error split into along / across the path.
 The tracking error is measured against the EKF estimate. With the EKF on VIO that is the VIO itself, so it
 shows how well the drone follows what it believes, not true accuracy (that needs the Gazebo ground truth).
 """
@@ -66,6 +72,24 @@ class Reference:
         return np.array(c[0:3]), np.array(c[3:6]), np.array(c[6:9]), float(c[12])
 
 
+    def nearest(self, pos, t, window):
+        """Path sample nearest to pos within +-window s of t. Returns (horizontal unit tangent, cross-path vector
+        (horizontal, from the path to pos)) or None when the path direction is undefined (nearly vertical)."""
+        i0 = int(np.searchsorted(self.t, max(t - window, 0.0)))
+        i1 = int(np.searchsorted(self.t, min(t + window, self.T))) + 1
+        P = self.d[i0:i1, 1:4]
+        if len(P) == 0:
+            return None
+        i = i0 + int(np.argmin(np.sum((P - pos) ** 2, axis=1)))
+        th = self.d[i, 4:6]
+        n = float(np.linalg.norm(th))
+        if n < 1e-3:
+            return None
+        th = th / n
+        e = pos[:2] - self.d[i, 1:3]
+        return th, e - (e @ th) * th
+
+
 class Follower(Node):
     def __init__(self):
         super().__init__("traj_follower")
@@ -74,6 +98,10 @@ class Follower(Node):
         self.declare_parameter("hold_s", 2.0)
         self.declare_parameter("start_tol", 0.5)
         self.declare_parameter("yaw_rate_max", 1.5)
+        self.declare_parameter("contour_gain", 0.0)
+        self.declare_parameter("contour_max", 0.5)
+        self.declare_parameter("contour_min_speed", 1.0)
+        self.declare_parameter("search_s", 1.0)
         self.declare_parameter("actual_topic", "/mavros/local_position/odom")
         self.declare_parameter("log", "")
         path = self.get_parameter("traj").value
@@ -85,6 +113,10 @@ class Follower(Node):
         self.yaw_rate_max = float(self.get_parameter("yaw_rate_max").value)
         self.log_prefix = os.path.expanduser(self.get_parameter("log").value or default_log_prefix())
         rate = float(self.get_parameter("rate_hz").value)
+        self.c_gain = float(self.get_parameter("contour_gain").value)
+        self.c_max = float(self.get_parameter("contour_max").value)
+        self.c_min_speed = float(self.get_parameter("contour_min_speed").value)
+        self.search_s = float(self.get_parameter("search_s").value)
 
         self.pos = None
         self.yaw = 0.0
@@ -101,7 +133,8 @@ class Follower(Node):
         self.create_subscription(Odometry, self.get_parameter("actual_topic").value, self.on_odom,
                                  qos_profile_sensor_data)
         self.create_timer(1.0 / rate, self.tick)
-        self.get_logger().info(f"{path}: {self.ref.T:.1f} s, first point {np.round(self.ref.p0, 2).tolist()}")
+        self.get_logger().info(f"{path}: {self.ref.T:.1f} s, first point {np.round(self.ref.p0, 2).tolist()}, "
+                               f"contour gain {self.c_gain} (max {self.c_max} m)")
 
     def on_odom(self, m):
         p, q = m.pose.pose.position, m.pose.pose.orientation
@@ -141,6 +174,18 @@ class Follower(Node):
         if not running:                       # past the end: hold the last point at rest
             p, v, a = self.ref.p_end, np.zeros(3), np.zeros(3)
 
+        pref = p                                  # reference position, before any correction
+        lat = along = 0.0
+        if running and np.linalg.norm(v[:2]) >= self.c_min_speed:
+            nr = self.ref.nearest(self.pos, t, self.search_s)
+            if nr is not None:
+                th, cross = nr
+                along = float((self.pos[:2] - pref[:2]) @ th)         # ahead (+) or behind (-) the time reference
+                lat = float(np.linalg.norm(cross))
+                if self.c_gain > 0.0 and lat > 1e-6:
+                    shift = min(self.c_gain * lat, self.c_max) * cross / lat
+                    p = p.copy()
+                    p[:2] = p[:2] - shift                     # push back against the sideways error
         dt = max(now - self.last_now, 0.0)
         self.last_now = now
         step = self.yaw_rate_max * dt
@@ -159,9 +204,9 @@ class Follower(Node):
         self.pub.publish(m)
 
         if running:
-            self.rows.append([t, *p, *self.pos])
+            self.rows.append([t, *pref, *self.pos, *p, lat, along])
             if now >= self.next_report:
-                e = float(np.linalg.norm(self.pos - p))
+                e = float(np.linalg.norm(self.pos - pref))
                 self.get_logger().info(f"t={t:5.1f}/{self.ref.T:.1f} s   ref speed {np.linalg.norm(v):.2f} m/s   "
                                        f"position error {e:.2f} m")
                 self.next_report = now + 2.0
@@ -181,13 +226,17 @@ class Follower(Node):
             eh = np.linalg.norm(err[:, :2], axis=1)
             os.makedirs(os.path.dirname(os.path.abspath(self.log_prefix)), exist_ok=True)
             np.savetxt(self.log_prefix + ".csv", r, delimiter=",", fmt="%.5f",
-                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z", comments="")
+                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z,cmd_x,cmd_y,cmd_z,cross,along", comments="")
             print("\n================ trajectory tracking ================")
             print(f"followed {r[-1, 0]:.1f} s of {self.ref.T:.1f} s")
             print(f"position error RMS (3D)  : {np.sqrt(np.mean(e3 ** 2)):.3f} m")
             print(f"  horizontal / vertical  : {np.sqrt(np.mean(eh ** 2)):.3f} m / "
                   f"{np.sqrt(np.mean(err[:, 2] ** 2)):.3f} m")
             print(f"max error                : {e3.max():.3f} m")
+            mv = r[:, 10] > 0                      # rows where the path direction was defined (moving)
+            if mv.any():
+                print(f"across the path (horiz.) : mean {r[mv, 10].mean():.3f} m  p95 {np.percentile(r[mv, 10], 95):.3f} m")
+                print(f"along the path (horiz.)  : mean |.| {np.abs(r[mv, 11]).mean():.3f} m  signed {r[mv, 11].mean():+.3f} m")
             print("(error vs the EKF position estimate, not vs Gazebo ground truth)")
             print("=====================================================")
             print("log saved to", self.log_prefix + ".csv\n")
