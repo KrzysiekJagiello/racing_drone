@@ -42,6 +42,26 @@ set_retry f PSC_JERK_XY    20 3 || say "PSC_JERK_XY not accepted: the path will 
 set_retry f PSC_JERK_Z     20 3 || say "PSC_JERK_Z not accepted: the path will be followed late"
 set_retry i ARMING_CHECK   0   || exit 1
 
+say "tuning parameters (defaults = ArduPilot values)"
+ITC=${ATC_INPUT_TC:-0.15}
+ANG=${ATC_ANG_P:-4.5}
+PXY=${PSC_POSXY_P:-1.0}
+VXI=${PSC_VELXY_I:-1.0}
+PZ=${PSC_POSZ_P:-1.0}
+VZ=${PSC_VELZ_P:-5.0}
+AZP=${PSC_ACCZ_P:-0.5}
+AZI=${PSC_ACCZ_I:-1.0}
+set_retry f ATC_INPUT_TC  $ITC || exit 1
+set_retry f ATC_ANG_RLL_P $ANG || exit 1
+set_retry f ATC_ANG_PIT_P $ANG || exit 1
+set_retry f PSC_POSXY_P   $PXY || exit 1
+set_retry f PSC_VELXY_I   $VXI || exit 1
+set_retry f PSC_POSZ_P    $PZ  || exit 1
+set_retry f PSC_VELZ_P    $VZ  || exit 1
+set_retry f PSC_ACCZ_P    $AZP || exit 1
+set_retry f PSC_ACCZ_I    $AZI || exit 1
+say "ATC_INPUT_TC=$ITC ANG_P=$ANG POSXY_P=$PXY VELXY_I=$VXI POSZ_P=$PZ VELZ_P=$VZ ACCZ_P=$AZP ACCZ_I=$AZI"
+
 takeoff_hover "$Z0" || exit 1
 if [ "$USE_VIO" = 1 ]; then switch_to_vio || exit 1; fi
 
