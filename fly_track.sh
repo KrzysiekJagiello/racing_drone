@@ -32,15 +32,24 @@ wait_fcu
 wait_gps || exit 1
 
 say "raising guided limits, arming checks off (sim)"
-set_retry f WPNAV_SPEED    900 || exit 1     # cm/s, ceiling: the trajectory sets the speed
-set_retry f WPNAV_ACCEL    900 || exit 1     # cm/s^2, ceiling
-set_retry f WPNAV_SPEED_UP 500 || exit 1
-set_retry f WPNAV_SPEED_DN 500 || exit 1
-set_retry f WPNAV_ACCEL_Z  700 || exit 1
-set_retry f ANGLE_MAX      4500 || exit 1    # centi-deg, default 3000 caps acceleration at ~5.7 m/s^2
-set_retry f PSC_JERK_XY    20 3 || say "PSC_JERK_XY not accepted: the path will be followed late"   # default 5 m/s^3
-set_retry f PSC_JERK_Z     20 3 || say "PSC_JERK_Z not accepted: the path will be followed late"
-set_retry i ARMING_CHECK   0   || exit 1
+WSP=${WPNAV_SPEED:-900}
+WAC=${WPNAV_ACCEL:-900}
+WUP=${WPNAV_SPEED_UP:-500}
+WDN=${WPNAV_SPEED_DN:-500}
+WAZ=${WPNAV_ACCEL_Z:-700}
+AMX=${ANGLE_MAX:-4500}
+JXY=${PSC_JERK_XY:-20}
+JZ=${PSC_JERK_Z:-20}
+set_retry f WPNAV_SPEED    $WSP || exit 1     # cm/s, ceiling: the trajectory sets the speed
+set_retry f WPNAV_ACCEL    $WAC || exit 1     # cm/s^2, ceiling
+set_retry f WPNAV_SPEED_UP $WUP || exit 1
+set_retry f WPNAV_SPEED_DN $WDN || exit 1
+set_retry f WPNAV_ACCEL_Z  $WAZ || exit 1
+set_retry f ANGLE_MAX      $AMX || exit 1     # centi-deg, default 3000 caps acceleration at ~5.7 m/s^2
+set_retry f PSC_JERK_XY    $JXY 3 || say "PSC_JERK_XY not accepted: the path will be followed late"   # default 5 m/s^3
+set_retry f PSC_JERK_Z     $JZ  3 || say "PSC_JERK_Z not accepted: the path will be followed late"
+set_retry i ARMING_CHECK   0 || exit 1
+say "limits: WPNAV_SPEED=$WSP ACCEL=$WAC UP=$WUP DN=$WDN ACCEL_Z=$WAZ ANGLE_MAX=$AMX JERK_XY=$JXY JERK_Z=$JZ"
 
 say "tuning parameters (defaults = ArduPilot values)"
 ITC=${ATC_INPUT_TC:-0.15}
