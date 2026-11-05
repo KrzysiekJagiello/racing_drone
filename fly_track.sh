@@ -38,8 +38,8 @@ WUP=${WPNAV_SPEED_UP:-500}
 WDN=${WPNAV_SPEED_DN:-500}
 WAZ=${WPNAV_ACCEL_Z:-700}
 AMX=${ANGLE_MAX:-4500}
-JXY=${PSC_JERK_XY:-20}
-JZ=${PSC_JERK_Z:-20}
+JXY=${PSC_JERK_XY:-80}
+JZ=${PSC_JERK_Z:-80}
 set_retry f WPNAV_SPEED    $WSP || exit 1     # cm/s, ceiling: the trajectory sets the speed
 set_retry f WPNAV_ACCEL    $WAC || exit 1     # cm/s^2, ceiling
 set_retry f WPNAV_SPEED_UP $WUP || exit 1
@@ -54,12 +54,12 @@ say "limits: WPNAV_SPEED=$WSP ACCEL=$WAC UP=$WUP DN=$WDN ACCEL_Z=$WAZ ANGLE_MAX=
 say "tuning parameters (defaults = ArduPilot values)"
 ITC=${ATC_INPUT_TC:-0.15}
 ANG=${ATC_ANG_P:-4.5}
-PXY=${PSC_POSXY_P:-1.0}
+PXY=${PSC_POSXY_P:-2.5}
 VXI=${PSC_VELXY_I:-1.0}
 PZ=${PSC_POSZ_P:-1.0}
 VZ=${PSC_VELZ_P:-5.0}
-AZP=${PSC_ACCZ_P:-0.5}
-AZI=${PSC_ACCZ_I:-1.0}
+AZP=${PSC_ACCZ_P:-0.75}
+AZI=${PSC_ACCZ_I:-1.5}
 set_retry f ATC_INPUT_TC  $ITC || exit 1
 set_retry f ATC_ANG_RLL_P $ANG || exit 1
 set_retry f ATC_ANG_PIT_P $ANG || exit 1
