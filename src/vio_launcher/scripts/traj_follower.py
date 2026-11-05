@@ -17,9 +17,16 @@ Parameters
   start_tol     abort if the drone is farther than this [m] from the first point   (default 0.5)
   yaw_rate_max  limit on how fast the commanded yaw may turn [rad/s]   (default 1.5)
   contour_gain  shift the setpoint sideways, against the horizontal cross-path error, by gain x error
-                (0 = off, the old behaviour; try 0.5, then 1.0)               (default 0)
+                (0 = off; no gain on the tuned controller, it trades outward bias for inward swing)  (default 0)
   contour_max   limit on that shift [m]                                (default 0.5)
   contour_min_speed  no correction below this reference speed [m/s]    (default 1.0)
+  contour_ki    integral part of the contour correction [1/s]: slowly builds an inward shift against the mean outward
+                error in the turns. "Outward" is taken from the sign of the path curvature, so it follows a change
+                of turn direction. 0 = off                                            (default 0)
+  ki_max        limit on the integral shift [m]                                      (default 0.3)
+  ki_leak_s     time constant of the slow leak of the integral [s], 0 = no leak      (default 60)
+  ki_min_curv   path curvature [1/m] above which the integral is fully active; below it fades out  (default 0.05)
+  ramp_s        the integral part grows linearly from 0 over this time at the start   (default 2)
   search_s      the nearest path point is searched within +-search_s of the reference time   (default 1.0)
   actual_topic  odometry used for the tracking error             (default /mavros/local_position/odom)
   log           output prefix for <log>.csv with reference vs actual (default <flight_logs>/track_log_<time>,
@@ -27,6 +34,8 @@ Parameters
 
 Exit code 0 = finished, 1 = aborted (wrong start position, bad file, interrupted).
 The log also has the setpoint actually sent (cmd_x,y,z) and the error split into along / across the path.
+Tested and removed: a time look-ahead and a position-based time anchor (no lateral benefit, the error is
+amplitude, not phase).
 The tracking error is measured against the EKF estimate. With the EKF on VIO that is the VIO itself, so it
 shows how well the drone follows what it believes, not true accuracy (that needs the Gazebo ground truth).
 """
@@ -66,6 +75,12 @@ class Reference:
         self.p0 = d[0, 1:4].copy()
         self.p_end = d[-1, 1:4].copy()
 
+    def kappa(self, i):
+        """Signed horizontal curvature [1/m] of sample i (+ = turning left)."""
+        v, a = self.d[i, 4:6], self.d[i, 7:9]
+        sp = float(np.linalg.norm(v))
+        return float((v[0] * a[1] - v[1] * a[0]) / sp ** 3) if sp > 1e-3 else 0.0
+
     def at(self, t):
         t = min(max(t, 0.0), self.T)
         c = [np.interp(t, self.t, self.d[:, k]) for k in range(1, 14)]
@@ -74,7 +89,7 @@ class Reference:
 
     def nearest(self, pos, t, window):
         """Path sample nearest to pos within +-window s of t. Returns (horizontal unit tangent, cross-path vector
-        (horizontal, from the path to pos)) or None when the path direction is undefined (nearly vertical)."""
+        (horizontal, from the path to pos), time of that sample, signed curvature there) or None when the path direction is undefined (nearly vertical)."""
         i0 = int(np.searchsorted(self.t, max(t - window, 0.0)))
         i1 = int(np.searchsorted(self.t, min(t + window, self.T))) + 1
         P = self.d[i0:i1, 1:4]
@@ -87,7 +102,37 @@ class Reference:
             return None
         th = th / n
         e = pos[:2] - self.d[i, 1:3]
-        return th, e - (e @ th) * th
+        return th, e - (e @ th) * th, float(self.t[i]), self.kappa(i)
+
+
+class Contour:
+    """Sideways correction of the setpoint: proportional to the cross-path error plus a slow integral of the
+    outward error (outward = away from the centre of the turn, from the sign of the curvature)."""
+
+    def __init__(self, gain, cmax, ki, ki_max, leak_s, min_curv):
+        self.gain, self.cmax, self.ki = gain, cmax, ki
+        self.ki_max, self.leak_s, self.min_curv = ki_max, leak_s, max(min_curv, 1e-6)
+        self.I = 0.0                                  # integral shift, + = push inward [m]
+
+    def shift(self, nr, dt, ramp):
+        """Horizontal setpoint shift [m] to subtract from the reference. nr as returned by Reference.nearest."""
+        th, cross, _, kap = nr
+        lat = float(np.linalg.norm(cross))
+        s = np.zeros(2)
+        if self.gain > 0.0 and lat > 1e-6:
+            s = min(self.gain * lat, self.cmax) * cross / lat
+        if self.ki > 0.0:
+            w = min(1.0, abs(kap) / self.min_curv)
+            n_out = -math.copysign(1.0, kap) * np.array([-th[1], th[0]])   # unit vector away from the turn centre
+            e_out = float(cross @ n_out)
+            leak = self.I / self.leak_s if self.leak_s > 0 else 0.0
+            self.I += (self.ki * w * ramp * e_out - leak) * dt
+            self.I = max(-self.ki_max, min(self.ki_max, self.I))
+            s = s + w * self.I * n_out
+            n = float(np.linalg.norm(s))
+            if n > self.cmax:
+                s = s * (self.cmax / n)
+        return s
 
 
 class Follower(Node):
@@ -101,7 +146,12 @@ class Follower(Node):
         self.declare_parameter("contour_gain", 0.0)
         self.declare_parameter("contour_max", 0.5)
         self.declare_parameter("contour_min_speed", 1.0)
+        self.declare_parameter("contour_ki", 0.0)
+        self.declare_parameter("ki_max", 0.3)
+        self.declare_parameter("ki_leak_s", 60.0)
+        self.declare_parameter("ki_min_curv", 0.05)
         self.declare_parameter("search_s", 1.0)
+        self.declare_parameter("ramp_s", 2.0)
         self.declare_parameter("actual_topic", "/mavros/local_position/odom")
         self.declare_parameter("log", "")
         path = self.get_parameter("traj").value
@@ -117,6 +167,10 @@ class Follower(Node):
         self.c_max = float(self.get_parameter("contour_max").value)
         self.c_min_speed = float(self.get_parameter("contour_min_speed").value)
         self.search_s = float(self.get_parameter("search_s").value)
+        self.contour = Contour(self.c_gain, self.c_max, float(self.get_parameter("contour_ki").value),
+                               float(self.get_parameter("ki_max").value), float(self.get_parameter("ki_leak_s").value),
+                               float(self.get_parameter("ki_min_curv").value))
+        self.ramp_s = float(self.get_parameter("ramp_s").value)
 
         self.pos = None
         self.yaw = 0.0
@@ -134,7 +188,7 @@ class Follower(Node):
                                  qos_profile_sensor_data)
         self.create_timer(1.0 / rate, self.tick)
         self.get_logger().info(f"{path}: {self.ref.T:.1f} s, first point {np.round(self.ref.p0, 2).tolist()}, "
-                               f"contour gain {self.c_gain} (max {self.c_max} m)")
+                               f"contour gain {self.c_gain} (max {self.c_max} m), ki {self.contour.ki}")
 
     def on_odom(self, m):
         p, q = m.pose.pose.position, m.pose.pose.orientation
@@ -169,25 +223,24 @@ class Follower(Node):
             self.get_logger().info("start following")
 
         t = now - self.t0
-        p, v, a, yref = self.ref.at(t)
-        running = t <= self.ref.T
-        if not running:                       # past the end: hold the last point at rest
-            p, v, a = self.ref.p_end, np.zeros(3), np.zeros(3)
-
-        pref = p                                  # reference position, before any correction
-        lat = along = 0.0
-        if running and np.linalg.norm(v[:2]) >= self.c_min_speed:
-            nr = self.ref.nearest(self.pos, t, self.search_s)
-            if nr is not None:
-                th, cross = nr
-                along = float((self.pos[:2] - pref[:2]) @ th)         # ahead (+) or behind (-) the time reference
-                lat = float(np.linalg.norm(cross))
-                if self.c_gain > 0.0 and lat > 1e-6:
-                    shift = min(self.c_gain * lat, self.c_max) * cross / lat
-                    p = p.copy()
-                    p[:2] = p[:2] - shift                     # push back against the sideways error
         dt = max(now - self.last_now, 0.0)
         self.last_now = now
+        running = t <= self.ref.T
+        ramp = min(1.0, t / self.ramp_s) if self.ramp_s > 0 else 1.0
+        nr = self.ref.nearest(self.pos, t, self.search_s) if running else None
+        p, v, a, yref = self.ref.at(t)
+        pref = p                                  # reference point, before the contour shift
+        if not running:                       # past the end: hold the last point at rest
+            p, v, a = self.ref.p_end, np.zeros(3), np.zeros(3)
+            pref = p
+        lat = along = 0.0
+        if nr is not None and np.linalg.norm(v[:2]) >= self.c_min_speed:
+            th, cross = nr[0], nr[1]
+            along = float((self.pos[:2] - pref[:2]) @ th)             # ahead (+) or behind (-) the reference point
+            lat = float(np.linalg.norm(cross))
+            sh = self.contour.shift(nr, dt, ramp)
+            p = p.copy()
+            p[:2] = p[:2] - sh                                        # push back against the sideways error
         step = self.yaw_rate_max * dt
         self.ycmd += max(-step, min(step, wrap(yref - self.ycmd)))
 
@@ -204,7 +257,7 @@ class Follower(Node):
         self.pub.publish(m)
 
         if running:
-            self.rows.append([t, *pref, *self.pos, *p, lat, along])
+            self.rows.append([t, *pref, *self.pos, *p, lat, along, self.contour.I])
             if now >= self.next_report:
                 e = float(np.linalg.norm(self.pos - pref))
                 self.get_logger().info(f"t={t:5.1f}/{self.ref.T:.1f} s   ref speed {np.linalg.norm(v):.2f} m/s   "
@@ -226,7 +279,7 @@ class Follower(Node):
             eh = np.linalg.norm(err[:, :2], axis=1)
             os.makedirs(os.path.dirname(os.path.abspath(self.log_prefix)), exist_ok=True)
             np.savetxt(self.log_prefix + ".csv", r, delimiter=",", fmt="%.5f",
-                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z,cmd_x,cmd_y,cmd_z,cross,along", comments="")
+                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z,cmd_x,cmd_y,cmd_z,cross,along,integ", comments="")
             print("\n================ trajectory tracking ================")
             print(f"followed {r[-1, 0]:.1f} s of {self.ref.T:.1f} s")
             print(f"position error RMS (3D)  : {np.sqrt(np.mean(e3 ** 2)):.3f} m")
