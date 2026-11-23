@@ -14,7 +14,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # 2. Narzedzia, ROS 2, Gazebo Harmonic
 RUN apt-get update && apt-get install -y \
-    nano vim git curl wget lsb-release gnupg python3-pip \
+    nano vim git curl wget lsb-release gnupg python3-pip tmux \
     ros-humble-vision-msgs \
     ros-humble-pcl-ros \
     ros-humble-tf2-geometry-msgs \
