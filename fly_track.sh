@@ -49,6 +49,7 @@ set_retry f ANGLE_MAX      $AMX || exit 1     # centi-deg, default 3000 caps acc
 set_retry f PSC_JERK_XY    $JXY 3 || say "PSC_JERK_XY not accepted: the path will be followed late"   # default 5 m/s^3
 set_retry f PSC_JERK_Z     $JZ  3 || say "PSC_JERK_Z not accepted: the path will be followed late"
 set_retry i ARMING_CHECK   0 || exit 1
+set_retry i LOG_BITMASK 176127 || exit 1      # +1 = Fast Attitude: PSCx/ATT at loop rate
 say "limits: WPNAV_SPEED=$WSP ACCEL=$WAC UP=$WUP DN=$WDN ACCEL_Z=$WAZ ANGLE_MAX=$AMX JERK_XY=$JXY JERK_Z=$JZ"
 
 say "tuning parameters (defaults = ArduPilot values)"
