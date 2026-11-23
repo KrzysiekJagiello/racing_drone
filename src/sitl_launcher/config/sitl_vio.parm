@@ -1,0 +1,6 @@
+# SITL parameters needed for VIO (loaded as defaults by silt.launch.py)
+VISO_TYPE 1
+VISO_DELAY_MS 80
+EK3_SRC2_POSXY 6
+EK3_SRC2_YAW 6
+ARMING_CHECK 0

@@ -16,6 +16,7 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('sitl_launcher')
     world_path = os.path.join(pkg_share, 'worlds', 'iris_runway_rgb.sdf')
     models_path = os.path.join(pkg_share, 'models')
+    vio_parm_path = os.path.join(pkg_share, 'config', 'sitl_vio.parm')
 
     set_model_path = AppendEnvironmentVariable(
         'GZ_SIM_RESOURCE_PATH',
@@ -34,7 +35,7 @@ def generate_launch_description():
 
     # Start ArduPilot SITL
     ardupilot_sitl = ExecuteProcess(
-        cmd=['sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --console -N --out=udp:127.0.0.1:14551 --mavproxy-args="--streamrate=50"'],
+        cmd=['sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --console -N --out=udp:127.0.0.1:14551 --mavproxy-args="--streamrate=50" ' f'--add-param-file={vio_parm_path}'],
         cwd='/home/ros/ardupilot',
         shell=True,
         output='screen'
