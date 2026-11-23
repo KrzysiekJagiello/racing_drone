@@ -74,9 +74,20 @@ say "ATC_INPUT_TC=$ITC ANG_P=$ANG POSXY_P=$PXY VELXY_I=$VXI POSZ_P=$PZ VELZ_P=$V
 takeoff_hover "$Z0" || exit 1
 if [ "$USE_VIO" = 1 ]; then switch_to_vio || exit 1; fi
 
+say "follower corrections (defaults = off)"
+AZC=${AZ_COMP:-0.0}
+AZMIN=${AZ_COMP_MIN:-0.6}
+AZMAX=${AZ_COMP_MAX:-1.5}
+CG=${CONTOUR_GAIN:-0.0}
+CKI=${CONTOUR_KI:-0.0}
+say "az_comp=$AZC ($AZMIN..$AZMAX) contour_gain=$CG contour_ki=$CKI"
+
 say "following the trajectory"
 ros2 run vio_launcher traj_follower.py --ros-args -p use_sim_time:=true -p traj:="$TRAJ" \
-    -p log:="${FLIGHT_LOGS:-$HOME/ros2_ws/flight_logs}/track_log_$(date +%Y%m%d_%H%M%S)"
+    -p log:="${FLIGHT_LOGS:-$HOME/ros2_ws/flight_logs}/track_log_$(date +%Y%m%d_%H%M%S)" \
+    -p az_comp:=$AZC -p az_comp_min:=$AZMIN -p az_comp_max:=$AZMAX \
+    -p contour_gain:=$CG -p contour_ki:=$CKI
+    
 rc=$?
 [ "$rc" = 0 ] || say "follower exited with code $rc"
 

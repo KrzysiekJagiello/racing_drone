@@ -20,6 +20,12 @@ Parameters
                 (0 = off; no gain on the tuned controller, it trades outward bias for inward swing)  (default 0)
   contour_max   limit on that shift [m]                                (default 0.5)
   contour_min_speed  no correction below this reference speed [m/s]    (default 1.0)
+  az_comp       compensate the vertical-horizontal coupling: ArduPilot sets the tilt from a_horizontal / g, so the
+                horizontal acceleration actually delivered is the commanded one x (g + a_vertical) / g. The horizontal
+                acceleration feed-forward is scaled by g / (g + a_vertical) of the reference, clamped to
+                [az_comp_min, az_comp_max]. 0 = off, 1 = full compensation, in between = partial     (default 0)
+  az_comp_min   lower clamp of that scale                                                     (default 0.6)
+  az_comp_max   upper clamp of that scale                                                     (default 1.5)
   contour_ki    integral part of the contour correction [1/s]: slowly builds an inward shift against the mean outward
                 error in the turns. "Outward" is taken from the sign of the path curvature, so it follows a change
                 of turn direction. 0 = off                                            (default 0)
@@ -146,6 +152,9 @@ class Follower(Node):
         self.declare_parameter("contour_gain", 0.0)
         self.declare_parameter("contour_max", 0.5)
         self.declare_parameter("contour_min_speed", 1.0)
+        self.declare_parameter("az_comp", 0.0)
+        self.declare_parameter("az_comp_min", 0.6)
+        self.declare_parameter("az_comp_max", 1.5)
         self.declare_parameter("contour_ki", 0.0)
         self.declare_parameter("ki_max", 0.3)
         self.declare_parameter("ki_leak_s", 60.0)
@@ -171,6 +180,9 @@ class Follower(Node):
                                float(self.get_parameter("ki_max").value), float(self.get_parameter("ki_leak_s").value),
                                float(self.get_parameter("ki_min_curv").value))
         self.ramp_s = float(self.get_parameter("ramp_s").value)
+        self.az_comp = float(self.get_parameter("az_comp").value)
+        self.az_min = float(self.get_parameter("az_comp_min").value)
+        self.az_max = float(self.get_parameter("az_comp_max").value)
 
         self.pos = None
         self.yaw = 0.0
@@ -188,7 +200,7 @@ class Follower(Node):
                                  qos_profile_sensor_data)
         self.create_timer(1.0 / rate, self.tick)
         self.get_logger().info(f"{path}: {self.ref.T:.1f} s, first point {np.round(self.ref.p0, 2).tolist()}, "
-                               f"contour gain {self.c_gain} (max {self.c_max} m), ki {self.contour.ki}")
+                               f"contour gain {self.c_gain} (max {self.c_max} m), ki {self.contour.ki}, az_comp {self.az_comp} ({self.az_min}..{self.az_max})")
 
     def on_odom(self, m):
         p, q = m.pose.pose.position, m.pose.pose.orientation
@@ -241,6 +253,12 @@ class Follower(Node):
             sh = self.contour.shift(nr, dt, ramp)
             p = p.copy()
             p[:2] = p[:2] - sh                                        # push back against the sideways error
+        azf = 1.0
+        if running and self.az_comp != 0.0:              # undo the (g + a_vertical) / g gain of the tilt command
+            f = 9.81 / max(9.81 + a[2], 1e-3)
+            azf = 1.0 + self.az_comp * (max(self.az_min, min(self.az_max, f)) - 1.0)
+            a = a.copy()
+            a[:2] = a[:2] * azf
         step = self.yaw_rate_max * dt
         self.ycmd += max(-step, min(step, wrap(yref - self.ycmd)))
 
@@ -257,7 +275,7 @@ class Follower(Node):
         self.pub.publish(m)
 
         if running:
-            self.rows.append([t, *pref, *self.pos, *p, lat, along, self.contour.I])
+            self.rows.append([t, *pref, *self.pos, *p, lat, along, self.contour.I, azf])
             if now >= self.next_report:
                 e = float(np.linalg.norm(self.pos - pref))
                 self.get_logger().info(f"t={t:5.1f}/{self.ref.T:.1f} s   ref speed {np.linalg.norm(v):.2f} m/s   "
@@ -279,7 +297,7 @@ class Follower(Node):
             eh = np.linalg.norm(err[:, :2], axis=1)
             os.makedirs(os.path.dirname(os.path.abspath(self.log_prefix)), exist_ok=True)
             np.savetxt(self.log_prefix + ".csv", r, delimiter=",", fmt="%.5f",
-                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z,cmd_x,cmd_y,cmd_z,cross,along,integ", comments="")
+                       header="t,ref_x,ref_y,ref_z,act_x,act_y,act_z,cmd_x,cmd_y,cmd_z,cross,along,integ,azf", comments="")
             print("\n================ trajectory tracking ================")
             print(f"followed {r[-1, 0]:.1f} s of {self.ref.T:.1f} s")
             print(f"position error RMS (3D)  : {np.sqrt(np.mean(e3 ** 2)):.3f} m")
