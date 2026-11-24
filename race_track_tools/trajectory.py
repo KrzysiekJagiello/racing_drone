@@ -2,7 +2,8 @@
 """Trajectory through racing gates (numpy only, no ROS).
 
     python3 trajectory.py waypoints_start_frame.csv --degree 5 --speed 2.0 --laps 1
-    python3 trajectory.py waypoints_start_frame.csv --method poly5 --help    # options of one method
+    python3 trajectory.py waypoints_start_frame.csv --method min_snap --laps 10 --max-tilt 42.8 --max-thrust 1.6
+    python3 trajectory.py waypoints_start_frame.csv --method min_snap --help    # options of one method
 
 Input: CSV from make_track.py (world frame for GPS, start frame for VIO).
 Path: start (at rest) -> gates x laps -> finish (at rest), made by a generator in generators/ (--method);
@@ -205,9 +206,9 @@ def main():
                         f"near gate {gates[who[int(np.argmin(clr_net))]]['id']} at t={t[int(np.argmin(clr_net))]:.2f} s")
     if p[:, 2].min() < a.min_z:
         problems.append(f"flies below min height {a.min_z:.2f} m: lowest z = {p[:, 2].min():.2f} m")
-    if amag.max() > a.max_acc:
+    if amag.max() > a.max_acc * 1.01:              # 1 %: limits are fitted on a coarser time grid
         problems.append(f"acceleration {amag.max():.1f} m/s^2 exceeds --max-acc {a.max_acc:.1f}")
-    if jmag.max() > a.max_jerk:
+    if jmag.max() > a.max_jerk * 1.01:
         problems.append(f"jerk {jmag.max():.1f} m/s^3 exceeds --max-jerk {a.max_jerk:.0f}: ArduPilot (PSC_JERK_XY/Z) "
                         f"will follow this late and overshoot")
     problems += res.get("problems", [])
@@ -230,7 +231,7 @@ def main():
         for s in problems:
             print("  -", s)
     else:
-        print("checks                  : all gates crossed forwards through the opening, no frame/ground/accel problems")
+        print("checks                  : all gates crossed forwards through the opening, no frame/ground/limit problems")
     print("============================================\n")
 
     arr = np.column_stack([t, p, v, acc, jerk, yaw])
